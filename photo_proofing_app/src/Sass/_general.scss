@@ -1,0 +1,60 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  word-break: break-word;
+  margin: 0;
+  padding: 0;
+}
+html,
+body,
+#root {
+  min-height: 100vh;
+}
+#root {
+  display: grid;
+  grid-template-rows: auto 1fr 150px;
+}
+a {
+  text-decoration: none;
+  color: rgb(72, 224, 255);
+  &:hover {
+    text-decoration: underline;
+  }
+}
+li {
+  list-style: none;
+}
+button,
+input[type="submit"] {
+  cursor: pointer;
+}
+img {
+  width: 100%;
+}
+input,
+textarea {
+  box-sizing: border-box;
+}
+textarea {
+  resize: vertical;
+}
+body {
+  max-width: 1200px;
+  margin: auto;
+  background: $dark;
+  color: $SoftLight;
+  font-family: "Roboto", sans-serif;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+.warning {
+  color: $warning;
+}

@@ -1,0 +1,46 @@
+header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  justify-items: space-between;
+  background: $dark;
+  height: $headerHeight;
+  picture {
+    height: $headerHeight;
+    img {
+      height: $headerHeight;
+    }
+  }
+  nav {
+    height: 100%;
+    ul {
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(4, 100px);
+      gap: 4px;
+      align-content: center;
+      justify-content: right;
+      margin-right: 10%;
+      a {
+        color: $light;
+        border: 1px solid $light;
+        min-width: 80px;
+        display: block;
+        text-align: center;
+        padding: 5px;
+      }
+    }
+  }
+  #loggedInDiv {
+    display: grid;
+    place-content: center;
+    margin-right: 10px;
+    span {
+      color: $light;
+    }
+    button {
+      margin-top: 6px;
+      width: 100%;
+    }
+  }
+}

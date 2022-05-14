@@ -1,0 +1,88 @@
+@mixin grid {
+  display: grid;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+}
+@mixin tag {
+  padding: 4px 10px;
+  background: $tagColor;
+  color: $dark;
+  min-width: 50px;
+  max-width: 150px;
+  text-align: center;
+  border-radius: 4px;
+}
+@mixin grid3Cols {
+  display: grid;
+  gap: 30px;
+  grid-template-columns: 1fr 1fr 1fr;
+}
+@mixin centeredForm {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+  border-radius: 6px;
+  background: $softDark;
+
+  .formDiv {
+    margin-bottom: 10px;
+
+    label {
+      display: block;
+      margin-bottom: 4px;
+    }
+    input,
+    textarea {
+      width: 100%;
+      padding: 6px 12px;
+      border-radius: 4px;
+      &:focus {
+        border-radius: 10px;
+      }
+      &[type="file"] {
+        cursor: pointer;
+        padding: 0;
+        &:focus {
+          border-radius: 10px;
+        }
+        &::file-selector-button {
+          cursor: pointer;
+          border: 2px solid $dark;
+          background: $light;
+          padding: 4px 50px;
+          transition: 0.3s;
+          width: 100px;
+          padding: 6px 12px;
+          border-radius: 4px;
+          &:hover {
+            background: $dark;
+            color: $SoftLight;
+          }
+        }
+      }
+      &[type="submit"] {
+        margin-top: 20px;
+        background: $dark;
+        color: $SoftLight;
+        transition-duration: 0.4s;
+        &:hover {
+          box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.24),
+            0 17px 50px 0 rgba(0, 0, 0, 0.19);
+        }
+      }
+    }
+    .radioDiv {
+      margin: 15px;
+      input {
+        display: inline;
+        width: auto;
+        margin-right: 10px;
+        transform: scale(2);
+      }
+      span {
+        display: inline;
+      }
+    }
+  }
+}
