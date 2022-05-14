@@ -3,3 +3,5 @@
 **/Images/Photos/*
 **/ProfileImages/*
 **/Watermarked/*
+
+!**/dontIgnoreFolder.txt
