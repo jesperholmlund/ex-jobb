@@ -6,8 +6,8 @@ const Footer = () => {
           <li>
             <a href="https://www.github.com/NoEz9/">Github</a>
           </li>
-          <li>
-          </li>
+          <li>By Anton Högström &copy; 2022</li>
+          <li>MIUN - Webbutvecklingsprogrammet</li>
         </ul>
       </div>
     </footer>

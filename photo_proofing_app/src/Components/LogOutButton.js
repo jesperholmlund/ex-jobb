@@ -1,9 +1,11 @@
 import { useContext, useState, useEffect } from "react";
 import AuthContext from "../Store/auth-context";
+import { useNavigate } from "react-router-dom";
 
 const LogOutButton = () => {
   const authContext = useContext(AuthContext);
   const [email, setEmail] = useState(localStorage.getItem("email"));
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (authContext.login) {
@@ -20,6 +22,7 @@ const LogOutButton = () => {
           onClick={() => {
             localStorage.removeItem("email");
             localStorage.removeItem("token");
+            navigate("/Login");
             authContext.logout();
           }}
         >

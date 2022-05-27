@@ -1,3 +1,13 @@
+@mixin media1000 {
+  @media (max-width: 1000px) {
+    @content;
+  }
+}
+@mixin media615 {
+  @media (max-width: 615px) {
+    @content;
+  }
+}
 @mixin grid {
   display: grid;
   gap: 10px;
@@ -17,6 +27,12 @@
   display: grid;
   gap: 30px;
   grid-template-columns: 1fr 1fr 1fr;
+  @include media1000 {
+    grid-template-columns: 1fr 1fr;
+  }
+  @include media615 {
+    grid-template-columns: 1fr;
+  }
 }
 @mixin centeredForm {
   max-width: 600px;

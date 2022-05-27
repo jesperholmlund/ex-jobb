@@ -25,10 +25,6 @@ const AlbumSchema = new mongoose.Schema(
       minlength: 2,
       maxlength: 200,
     },
-    watermarked: {
-      type: Boolean,
-      default: true,
-    },
     createdAt: {
       type: Date,
       default: Date.now,
@@ -39,8 +35,30 @@ const AlbumSchema = new mongoose.Schema(
     },
     invites: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        email: {
+          type: String,
+          trim: true,
+          minlength: 2,
+          maxlength: 100,
+          required: true,
+        },
+        watermarked: {
+          type: Boolean,
+          default: true,
+        },
+        done: {
+          type: Boolean,
+          default: false,
+        },
+        downloadableImages: {
+          type: Array,
+          default: [],
+        },
+        comment: {
+          type: String,
+          trim: true,
+          maxlength: 1000,
+        },
       },
     ],
     owner: {
@@ -54,6 +72,12 @@ const AlbumSchema = new mongoose.Schema(
 AlbumSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   this.tags = this.tags[0].replace(/\s/g, "").split(","); //Tar bort whitespace och splittar på kommatecken;
+  this.tags = this.tags.filter((tag) => tag !== ""); //Tar bort tomma taggar
+  //ta bort dubletter
+  this.tags = this.tags.filter((tag, index, self) => {
+    return self.indexOf(tag) === index;
+  });
+
   next();
 });
 

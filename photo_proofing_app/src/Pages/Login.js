@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
 import { useRef, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import LogOutButton from "../Components/LogOutButton"
+import LogOutButton from "../Components/LogOutButton";
 import AuthContext from "../Store/auth-context";
 import Loading from "../Images/loading.svg";
+import TitleRename from "../utility/TitleRename";
 
 const Login = () => {
+  TitleRename("Photo Proof - Login");
+
   const emailRef = useRef(); //
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,27 +48,24 @@ const Login = () => {
         }),
       });
       const json = await response.json();
-      console.log("json:", json);
       if (json.error) {
         setLoading(false);
         setError(json.error);
       } else {
-        //LYCKAT INLOGGNING
-        console.log(json);
+        //LYCKAD INLOGGNING
         setLoading(false);
         const token = json.token;
         const id = json._id;
-        authContext.login(token); //Lägg till token i authContext
         localStorage.setItem("email", email); //Lägg till email i localStorage
         localStorage.setItem("token", token); //Lägg till token i localStorage
         localStorage.setItem("id", id); //Lägg till ID i localStorage
-        console.log(email);
-        navigate("/profile/" + token); //Navigera till profile
+        authContext.login(token); //Lägg till token i authContext
+
+        navigate("/Profile"); //Navigera till profile
       }
     } catch (err) {
       setLoading(false);
       //Kolla om det gick fel
-      console.log("err:", err);
       setError("Something went wrong");
 
       //nollställ
@@ -81,6 +81,11 @@ const Login = () => {
   }
   return (
     <div>
+      {authContext.tokenTimeOver && (
+        <div className="autoLoggedOut">
+          <span>You were automatically logged out</span>
+        </div>
+      )}
       {isLoggedIn ? (
         <div className="centerBox">
           <span>

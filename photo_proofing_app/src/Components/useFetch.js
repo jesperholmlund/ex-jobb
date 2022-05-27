@@ -6,9 +6,9 @@ const useFetch = (endpoint) => {
   if (location.hostname === "localhost") {
     axios.defaults.baseURL = "http://localhost:8000/api/";
   } else {
-    axios.defaults.baseURL = "https://photo-proofing-app.herokuapp.com/api/";
+    axios.defaults.baseURL = "https://HEROKUPLACEHOLDER.COM/";
   }
-  axios.create({
+  let axiosRequest = axios.create({
     headers: {
       token: localStorage.getItem("token"),
       "Content-Type": "application/json",
@@ -22,7 +22,7 @@ const useFetch = (endpoint) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(endpoint);
+        const response = await axiosRequest.get(endpoint);
         setData(response.data);
         setLoading(false);
       } catch (error) {
@@ -31,11 +31,12 @@ const useFetch = (endpoint) => {
       }
     };
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint]);
 
   const refetch = async () => {
     try {
-      const response = await axios.get(endpoint);
+      const response = await axiosRequest.get(endpoint);
       setData(response.data);
       setLoading(false);
     } catch (error) {

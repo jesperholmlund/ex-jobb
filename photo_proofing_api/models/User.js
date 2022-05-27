@@ -75,18 +75,6 @@ const UserSchema = new mongoose.Schema(
       enum: ["Photographer", "Customer", "Admin"],
       default: "Customer",
     },
-    invites: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Invite",
-      },
-    ],
-    albums: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Album",
-      },
-    ],
   },
   { collection: "User" }
 );

@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Loading from "../Images/loading.svg";
 import axios from "axios";
+import TitleRename from "../utility/TitleRename";
 
 const NewAlbum = () => {
+  TitleRename("Photo Proof - New Album");
+
   const navigate = useNavigate();
 
   const [name, setName] = useState("");

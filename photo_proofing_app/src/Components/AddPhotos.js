@@ -176,6 +176,7 @@ const AddPhotos = (props) => {
           </div>
         </div>
         <input
+          id="addPhotosInput"
           type="file"
           name="photos"
           multiple
@@ -197,9 +198,6 @@ const AddPhotos = (props) => {
                     setFiles(null);
                     setFileNames(null);
                   }
-                  console.log(files);
-                  console.log(files.length);
-                  console.log(Array.isArray(files));
                 }}
               >
                 <img className="previewImg" src={image} alt="Preview" />

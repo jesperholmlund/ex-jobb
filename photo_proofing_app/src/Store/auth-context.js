@@ -3,6 +3,7 @@ import React, { useState } from "react";
 const AuthContext = React.createContext({
   token: "",
   isLoggedIn: false,
+  tokenTimeOver: false,
   login: (token) => {},
   logout: () => {},
 });
@@ -12,6 +13,7 @@ export const AuthContextProvider = (props) => {
   //Detta håller en inloggad även vid refresh och dylikt
   const [token, setToken] = useState(localStorage.getItem("token"));
   const isLoggedIn = !!token;
+  const [tokenTimeOver, setTokenTimeOver] = useState(false);
 
   const logout = () => {
     setToken(null);
@@ -20,12 +22,19 @@ export const AuthContextProvider = (props) => {
     localStorage.removeItem("id");
     localStorage.removeItem("email");
   };
+  const tokenTimeout = () => {
+    setTokenTimeOver(true);
+    console.log("tokenTimeout");
+    console.log(tokenTimeOver);
+    logout();
+  };
 
   const login = (token) => {
+    setTokenTimeOver(false);
     setToken(token);
     localStorage.setItem("token", token);
-    localStorage.setItem("expiryTime", Date.now() + 3600000);
-    setTimeout(logout, localStorage.getItem("expiryTime") - Date.now()); //Logout om token är över en timme
+    localStorage.setItem("expiryTime", Date.now() + 3600000); //1 timme
+    setTimeout(tokenTimeout, localStorage.getItem("expiryTime") - Date.now()); //Logout om token är över en timme gammal
   };
 
   const contextValue = {
@@ -33,6 +42,7 @@ export const AuthContextProvider = (props) => {
     isLoggedIn: isLoggedIn,
     login: login,
     logout: logout,
+    tokenTimeOver: tokenTimeOver,
   };
   return (
     <AuthContext.Provider value={contextValue}>

@@ -1,60 +1,23 @@
-import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import LoadingSVG from "../Images/loading.svg";
+import anonProfilePicture from "../Images/anon.svg";
 import MyAlbums from "../Components/ProfileAlbums";
+import MyInvites from "../Components/ProfileInvites";
+import useFetch from "../Components/useFetch";
+import TitleRename from "../utility/TitleRename";
 
 const Profile = () => {
-  const [profile, setProfile] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  TitleRename("Photo Proof - Profile");
 
-  //fetch för att hämta profilen
-  const fetchProfile = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(
-        "http://localhost:8000/api/user/" + localStorage.getItem("id"),
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            token: localStorage.getItem("token"),
-          },
-        }
-      );
-      const json = await response.json();
-      console.log("json:", json);
-      const transformedProfile = {
-        name: {
-          first: json.name.first,
-          last: json.name.last,
-        },
-        email: json.email,
-        company: json.company,
-        profilePicture: json.profilePicture,
-        bio: json.bio,
-        role: json.role,
-        albums: json.albums,
-        invites: json.invites,
-        id: json._id,
-      };
-      setProfile(transformedProfile);
-      setIsLoading(false);
-      return transformedProfile;
-    } catch (error) {
-      console.log(error);
-      setError("Something went wrong");
-      setIsLoading(false);
-    }
-  }, []);
-  //Kör fetchProfile när sidan laddas
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+  const {
+    data: profile,
+    loading,
+    error,
+  } = useFetch(`user/${localStorage.getItem("id")}`);
 
   return (
-    <>
-      {isLoading ? (
+    <section id="profileAlbumsSection">
+      {loading ? (
         <div className="loading">
           <img src={LoadingSVG} alt="loading" />
         </div>
@@ -65,7 +28,13 @@ const Profile = () => {
           <div className="profileInfo">
             <div className="profilePicture">
               <img
-                src={"../Images/ProfileImages/" + profile.profilePicture}
+                src={
+                  profile.profilePicture === null ||
+                  profile.profilePicture === "" ||
+                  profile.profilePicture === "anon.svg"
+                    ? anonProfilePicture
+                    : "../Images/ProfileImages/" + profile.profilePicture
+                }
                 alt="ProfileImage"
               />
             </div>
@@ -73,7 +42,7 @@ const Profile = () => {
             {profile.bio ? <p className="bio">{profile.bio}</p> : null}
             <p className="role">{profile.role}</p>
             <Link
-              to={`/profile/edit/${profile.id}`}
+              to={`/profile/edit/${profile._id}`}
               state={{
                 first: profile.name.first,
                 last: profile.name.last,
@@ -85,10 +54,11 @@ const Profile = () => {
               Edit Profile
             </Link>
           </div>
-          {profile.role === "Photographer" && <MyAlbums />}
+          {profile.role === "Photographer" && <MyAlbums role="Photographer" />}
+          {profile.role === "Customer" && <MyInvites role="Customer" />}
         </>
       )}
-    </>
+    </section>
   );
 };
 

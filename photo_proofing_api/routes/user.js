@@ -95,12 +95,8 @@ router.patch("/:id", verify, async (req, res) => {
       );
     }
     const updateUser = await User.findById(req.params.id);
-    req.body.name && req.body.name.first
-      ? (updateUser.name.first = req.body.name.first)
-      : null;
-    req.body.name && req.body.name.last
-      ? (updateUser.name.last = req.body.name.last)
-      : null;
+    req.body.first ? (updateUser.name.first = req.body.first) : null;
+    req.body.last ? (updateUser.name.last = req.body.last) : null;
     req.body.company ? (updateUser.company = req.body.company) : null;
     req.body.bio ? (updateUser.bio = req.body.bio) : null;
     req.body.email ? (updateUser.email = req.body.email) : null;

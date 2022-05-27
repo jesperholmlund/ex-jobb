@@ -9,12 +9,6 @@ const PhotoSchema = new mongoose.Schema(
       maxlength: 100,
       required: true,
     },
-    watermark: {
-      type: String,
-      trim: true,
-      minlength: 2,
-      maxlength: 103,
-    },
     createdAt: {
       type: Date,
       default: Date.now,
@@ -31,22 +25,12 @@ const PhotoSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Album",
     },
-    customers: {
-      type: Array,
-      default: [],
-      customers: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        like: {
-          type: Boolean,
-          default: false,
-        },
-        watermarked: {
-          type: Boolean,
-          default: true,
-        },
+    likes: [
+      {
+        userID: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        email: { type: String, trim: true, minlength: 2, maxlength: 100 },
       },
-    },
+    ],
   },
   { collection: "Photo" }
 );

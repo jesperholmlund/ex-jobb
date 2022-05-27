@@ -35,6 +35,18 @@ router.get("/", async (req, res) => {
   }
 });
 
+//Download images
+router.get("/download", async (req, res) => {
+  console.log("DOWNLOADA ROUTE");
+  try {
+    const photos = await Photo.find();
+    console.log(photos);
+    res.status(200).json(photos);
+  } catch (err) {
+    res.status(500).json({ error: err.message }); // Om något går fel
+  }
+});
+
 //hämta med id
 router.get("/:id", async (req, res) => {
   try {
@@ -189,13 +201,45 @@ router.patch("/:id", async (req, res) => {
     req.body.name ? (photo.name = req.body.name) : null;
     req.body.name ? (photo.watermark = "wm_" + req.body.name) : null;
     req.body.album ? (photo.album = req.body.album) : null;
-    req.body.customers ? (photo.customers = req.body.customers) : null;
     req.body.owner ? (photo.owner = req.body.owner) : null;
-    req.body.invites ? (photo.invites = req.body.invites) : null;
-    req.body.photos ? (photo.photos = req.body.photos) : null;
+
+    // if user has liked photo, add user id to liked array else remove user id from liked array
+    if (req.body.like) {
+      // //If user has liked photo
+      // console.log(1, req.body.like);
+      // console.log(2, photo);
+      // if (photo.likes.userID.includes(req.body.like.userID)) {
+      //   photo.likes.userID.pull(req.body.like.userID);
+      //   photo.likes.email.pull(req.body.like.email);
+      // } else {
+      //   photo.likes.userID.push(req.body.like.userID);
+      //   photo.likes.userID.push(req.body.like.email);
+      // }
+
+      if (photo.likes.length > 0) {
+        for (let i = 0; i < photo.likes.length; i++) {
+          if (photo.likes[i].userID === req.body.like.userID) {
+            photo.likes.userID.pull(req.body.like.userID);
+            photo.likes.email.pull(req.body.like.email);
+          } else {
+            photo.likes.push({
+              userID: req.body.like.userID,
+              email: req.body.like.email,
+            });
+          }
+        }
+      } else {
+        photo.likes.push({
+          userID: req.body.like.userID,
+          email: req.body.like.email,
+        });
+      }
+    }
+    console.log(photo);
     await photo.save();
     res.json({ Updated: req.params.id });
   } catch (err) {
+    console.log(err.message);
     res.status(500).json({ error: err.message }); // Om något går fel
   }
 });

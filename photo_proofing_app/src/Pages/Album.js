@@ -5,17 +5,30 @@ import { useState } from "react";
 import EditAlbum from "../Components/EditAlbum";
 import AddPhotos from "../Components/AddPhotos";
 import ShareAlbum from "../Components/ShareAlbum";
+import ShowDetailsComponent from "../Components/ShowDetails";
+import Download from "../Components/Download";
 import DeleteIcon from "../Images/delete.svg";
 import RemoveIcon from "../Images/remove.svg";
+import LikeIcon from "../Images/favorite.svg";
+import TitleRename from "../utility/TitleRename";
 
 const Album = (props) => {
+  TitleRename("Photo Proof - Album");
+
   const location = useLocation();
-  const { sentAlbum } = location.state; //Hämtar album från medskickad state
+  const { sentAlbum, role } = location.state; //Hämtar album från medskickad state
 
   const [showEdit, setShowEdit] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const [deleteArray, setDeleteArray] = useState([]);
+  const [comment, setComment] = useState("");
+
+  let owner = false;
+  if (sentAlbum.owner === localStorage.getItem("id")) {
+    owner = true;
+  }
 
   const {
     data: photosGet,
@@ -36,10 +49,12 @@ const Album = (props) => {
       setShowEdit(false);
       setShowAdd(false);
       setShowShare(false);
+      setShowDetails(false);
     } else {
       setShowEdit(true);
       setShowAdd(false);
       setShowShare(false);
+      setShowDetails(false);
     }
   };
 
@@ -48,10 +63,12 @@ const Album = (props) => {
       setShowAdd(false);
       setShowEdit(false);
       setShowShare(false);
+      setShowDetails(false);
     } else {
       setShowAdd(true);
       setShowEdit(false);
       setShowShare(false);
+      setShowDetails(false);
     }
   };
 
@@ -60,8 +77,24 @@ const Album = (props) => {
       setShowShare(false);
       setShowAdd(false);
       setShowEdit(false);
+      setShowDetails(false);
     } else {
       setShowShare(true);
+      setShowAdd(false);
+      setShowEdit(false);
+      setShowDetails(false);
+    }
+  };
+
+  const handleShowDetails = (e) => {
+    if (showDetails) {
+      setShowDetails(false);
+      setShowShare(false);
+      setShowAdd(false);
+      setShowEdit(false);
+    } else {
+      setShowDetails(true);
+      setShowShare(false);
       setShowAdd(false);
       setShowEdit(false);
     }
@@ -103,6 +136,75 @@ const Album = (props) => {
     }
   };
 
+  const toggleLikePhoto = async (e) => {
+    //toggle css klass för liked
+    try {
+      if (e.target.parentElement.parentElement.classList.contains("liked")) {
+        e.target.parentElement.parentElement.classList.remove("liked");
+        e.target.src = LikeIcon;
+      } else {
+        e.target.parentElement.parentElement.classList.add("liked");
+        e.target.src = RemoveIcon;
+      }
+      await fetch(
+        "http://localhost:8000/api/photo/" +
+          e.target.parentElement.parentElement.id,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            like: {
+              userID: localStorage.getItem("id"),
+              email: localStorage.getItem("email"),
+            },
+          }),
+        }
+      );
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const checkLiked = (photo) => {
+    //Kollar om en bild är likad, returnerar true eller false
+    if (photo.likes.length > 0) {
+      for (let i = 0; i < photo.likes.length; i++) {
+        if (photo.likes[i].userID === localStorage.getItem("id")) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  const sendRequest = async () => {
+    //Uppdatera album och visa för fotograf att kund "likat" färdigt
+    try {
+      const response = await fetch(
+        "http://localhost:8000/api/album/" + sentAlbum._id,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            done: true,
+            user: localStorage.getItem("id"),
+            email: localStorage.getItem("email"),
+            comment: comment,
+          }),
+        }
+      );
+      console.log(response);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   if (loadingPhotos) return <p>Loading...</p>;
   if (errorPhotos) {
     console.log(errorPhotos);
@@ -121,68 +223,116 @@ const Album = (props) => {
           );
         })}
       </div>
-      <div className="buttonDiv">
-        <button
-          style={
-            showEdit
-              ? {
-                  background: "#a2b3f7",
-                }
-              : null
-          }
-          onClick={handleShowEdit}
-        >
-          Edit Album
-        </button>
-        <button
-          style={
-            showAdd
-              ? {
-                  background: "#a2b3f7",
-                }
-              : null
-          }
-          onClick={handleShowAdd}
-        >
-          Add Photos
-        </button>
-        <button
-          style={
-            showShare
-              ? {
-                  background: "#a2b3f7",
-                }
-              : null
-          }
-          onClick={handleShowShare}
-        >
-          Share Album
-        </button>
-      </div>
-      {showEdit && (
+      {sentAlbum.description && (
+        <div id="descriptionDiv">
+          <p>{sentAlbum.description}</p>
+        </div>
+      )}
+      {owner && (
+        <div className="buttonDiv">
+          <button
+            style={
+              showEdit
+                ? {
+                    background: "#a2b3f7",
+                  }
+                : null
+            }
+            onClick={handleShowEdit}
+          >
+            Edit Album
+          </button>
+          <button
+            style={
+              showAdd
+                ? {
+                    background: "#a2b3f7",
+                  }
+                : null
+            }
+            onClick={handleShowAdd}
+          >
+            Add Photos
+          </button>
+          <button
+            style={
+              showShare
+                ? {
+                    background: "#a2b3f7",
+                  }
+                : null
+            }
+            onClick={handleShowShare}
+          >
+            Share Album
+          </button>
+        </div>
+      )}
+      {showEdit && owner && (
         <EditAlbum sentAlbum={albumGet} refetchAlbum={refetchAlbum} />
       )}
-      {showAdd && (
+      {showAdd && owner && (
         <AddPhotos sentAlbum={albumGet} refetchPhotos={refetchPhotos} />
       )}
-      {showShare && <ShareAlbum sentAlbum={albumGet} />}
-      {deleteArray.length > 0 && (
-        <div>
-          <h3>Delete {deleteArray.length} images</h3>
+      {showShare && owner && (
+        <ShareAlbum
+          sentAlbum={albumGet}
+          refetchAlbum={refetchAlbum}
+          handleShowDetails={handleShowDetails}
+        />
+      )}
+      {showDetails && owner && (
+        <ShowDetailsComponent
+          sentAlbum={albumGet}
+          refetchAlbum={refetchAlbum}
+          photosGet={photosGet}
+        />
+      )}
+      {deleteArray.length > 0 && owner && (
+        <div id="deletePhotosDiv">
+          <h3>
+            Delete {deleteArray.length}{" "}
+            {deleteArray.length > 1 ? "images" : "image"}
+          </h3>
           <button onClick={deletePhotos}>Delete Photos</button>
         </div>
+      )}
+      {role === "Customer" && (
+        <>
+          <Download
+            checkLiked={checkLiked}
+            photosGet={photosGet}
+            sentAlbum={sentAlbum}
+          />
+          <form id="sendRequestForm" onSubmit={(e) => e.preventDefault()}>
+            <label htmlFor="comment">Comment</label>
+            <textarea onChange={(e) => setComment(e.target.value)} />
+            <button onClick={sendRequest}>Send Request</button>
+          </form>
+        </>
       )}
       <div id="collection">
         {photosGet.length === 0 && <h2>No Photos found, Add photos!</h2>}
         {photosGet.map((photo) => {
           return (
-            <div className="photoDiv" id={photo._id} key={photo._id}>
-              <span onClick={addRemoveDelete}>
-                <img src={DeleteIcon} alt="Delete" />
+            <div
+              className={checkLiked(photo) ? "liked photoDiv" : "photoDiv"}
+              id={photo._id}
+              key={photo._id}
+            >
+              <span
+                style={{ backgroundColor: !owner && "rgb(0, 153, 23)" }}
+                onClick={owner ? addRemoveDelete : toggleLikePhoto}
+              >
+                <img src={owner ? DeleteIcon : LikeIcon} alt="Delete" />
               </span>
               <picture className="photo">
                 <img
-                  src={"../../Images/Photos/" + photo.name}
+                  src={
+                    role === "Customer"
+                      ? "../../Images/Watermarked/wm_" + photo.name
+                      : "../../Images/Photos/" + photo.name
+                  }
                   alt={photo.name}
                 />
               </picture>

@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Loading from "../Images/loading.svg";
 import axios from "axios";
+import TitleRename from "../utility/TitleRename";
 
 const EditProfile = () => {
+  TitleRename("Photo Proof - Edit Profile");
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -100,7 +103,7 @@ const EditProfile = () => {
         </div>
         <div className="formDiv">
           <label htmlFor="bio">Bio</label>
-          <input
+          <textarea
             type="text"
             id="bio"
             value={bio}

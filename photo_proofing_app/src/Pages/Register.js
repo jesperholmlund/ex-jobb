@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Loading from "../Images/loading.svg";
+import TitleRename from "../utility/TitleRename";
 
 const Register = () => {
+  TitleRename("Photo Proof - Register");
+
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
   const [company, setCompany] = useState("");

@@ -4,6 +4,7 @@ const Album = require("../models/Album"); // Album model
 const verify = require("../verifyToken"); // Verify token
 const { createAlbumValidation } = require("../validation"); // Validering
 
+//Hämta alla album
 router.get("/", async (req, res) => {
   try {
     const albums = await Album.find();
@@ -23,6 +24,23 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+//hämta album baserad på invite email det delats till  (för customers)
+router.get("/email/:email", async (req, res) => {
+  try {
+    const albums = await Album.find({
+      invites: {
+        $elemMatch: {
+          email: req.params.email,
+        },
+      },
+    });
+    res.status(200).json(albums);
+    console.log(albums);
+  } catch (err) {
+    res.status(500).json({ error: err.message }); // Om något går fel
+  }
+});
+
 //hämta alla med foreign key owner
 router.get("/user/:id", async (req, res) => {
   try {
@@ -33,10 +51,12 @@ router.get("/user/:id", async (req, res) => {
   }
 });
 
+//Skapa nytt album
 router.post("/", async (req, res) => {
-  //Upload Image
+  //Ladda upp fil om req.files finns
   if (req.files) {
     const file = req.files.file;
+    //Spara fil till path
     file.mv(
       `${__dirname}/../../photo_proofing_app/public/Images/AlbumCovers/${req.body.cover}`,
       async (err) => {
@@ -46,7 +66,7 @@ router.post("/", async (req, res) => {
       }
     );
   }
-
+  //Joi validering
   const { error } = createAlbumValidation(req.body);
   if (error) return res.status(400).json(error.details[0].message); //Om något går fel
 
@@ -67,6 +87,7 @@ router.post("/", async (req, res) => {
   }
 });
 
+//Raderar ett album
 router.delete("/:id", async (req, res) => {
   try {
     await Album.deleteOne({
@@ -78,6 +99,7 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+//Uppdaterar ett album
 router.patch("/:id", async (req, res) => {
   try {
     if (req.files) {
@@ -105,13 +127,51 @@ router.patch("/:id", async (req, res) => {
         );
       }
     }
+    //Hitta album och uppdatera med nya värden beroende på den data som skickats med
     const album = await Album.findById(req.params.id);
     req.body.name ? (album.name = req.body.name) : null;
     req.body.description ? (album.description = req.body.description) : null;
     req.body.tags ? (album.tags = req.body.tags) : null;
     req.body.cover ? (album.cover = req.body.cover) : null;
     req.body.owner ? (album.owner = req.body.owner) : null;
-    req.body.invites ? (album.invites = req.body.invites) : null;
+    req.body.done
+      ? (album.done = album.invites.map((invite) => {
+          if (invite.email === req.body.email) {
+            invite.done = req.body.done;
+            invite.comment = req.body.comment;
+          }
+        }))
+      : null;
+    req.body.allowDownload
+      ? (album.done = album.invites.map((invite) => {
+          if (invite.email === req.body.email) {
+            invite.downloadableImages = "hi";
+          }
+        }))
+      : null;
+    //Lägger till ny email i arrayen med data
+    req.body.addEmail
+      ? album.invites.push({
+          email: req.body.addEmail.email,
+          watermarked: req.body.addEmail.watermarked,
+        })
+      : null;
+    //Tar bort en email från arrayen med data
+    req.body.removeEmail
+      ? (album.invites = album.invites.filter(
+          (invite) => invite.email !== req.body.removeEmail.email
+        ))
+      : null;
+    //sätter watermarked till det motsatta värdet(boolean)
+    req.body.toggleWatermark
+      ? (album.invites = album.invites.map((invite) => {
+          if (invite.email === req.body.toggleWatermark.email) {
+            invite.watermarked = !invite.watermarked;
+            console.log(invite.watermarked);
+          }
+          return invite;
+        }))
+      : null;
     req.body.photos ? (album.photos = req.body.photos) : null;
     await album.save();
     res.json({ Updated: req.params.id });

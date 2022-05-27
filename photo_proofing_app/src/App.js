@@ -1,8 +1,12 @@
 import "./Sass/App.scss";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useNavigate,
+} from "react-router-dom";
 import { Fragment, useContext } from "react";
 import AuthContext from "./Store/auth-context";
-import { Navigate } from "react-router-dom";
 
 //Components
 import Header from "./Components/Header";
@@ -14,9 +18,9 @@ import Login from "./Pages/Login";
 import Register from "./Pages/Register";
 import Profile from "./Pages/Profile";
 import EditProfile from "./Pages/EditProfile";
-import Photographer from "./Pages/Photographer";
 import NewAlbum from "./Pages/NewAlbum";
 import Album from "./Pages/Album";
+import NotFound from "./Pages/NotFound";
 
 function App() {
   const authContext = useContext(AuthContext);
@@ -37,7 +41,6 @@ function App() {
             {authContext.isLoggedIn && (
               <>
                 <Route exact path="/Profile" element={<Profile />} />
-                <Route exact path="/Profile/:id" element={<Photographer />} />
                 <Route
                   exact
                   path="/Profile/Edit/:id"
@@ -47,7 +50,10 @@ function App() {
                 <Route exact path="Profile/Album/:id" element={<Album />} />
               </>
             )}
-            <Route path="*" element={<Navigate to="/" />} />
+            {authContext.tokenTimeOver && (
+              <Route path="*" element={<Login />} />
+            )}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
         <Footer />

@@ -1,51 +1,205 @@
 import { useState, useEffect } from "react";
 
-const ShareAlbum = () => {
+//handleShowDetails döljer showEdit, showAdd, showShare och visar showDetails i parent-komponenten
+const ShareAlbum = ({ sentAlbum, refetchAlbum, handleShowDetails }) => {
   const [email, setEmail] = useState("");
-  const [watermarked, setWatermarked] = useState("");
+  const [watermarked, setWatermarked] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [album, setAlbum] = useState(sentAlbum);
+
+  useEffect(() => {
+    setError("");
+  }, [email, watermarked]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      //Kontrollera att email ej är tomt, att email innehåller @ och .
+      if (email === "" || !email.includes("@" || !email.includes("."))) {
+        setError("Please enter a valid email");
+        setLoading(false);
+        return;
+      }
+      //Loopar igenom array med invites. Kontrollerar om email finns i arrayen.
+      for (let i = 0; i < album.invites.length; i++) {
+        if (album.invites[i].email === email) {
+          setError("This email is already invited");
+          setLoading(false);
+          return;
+        }
+      }
+      //Anrop för share album
+      await fetch("http://localhost:8000/api/album/" + album._id, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          token: localStorage.getItem("token"),
+        },
+        body: JSON.stringify({
+          addEmail: {
+            email: email,
+            watermarked: watermarked,
+          },
+        }),
+      });
+      //Lyckat anrop
+      console.log(email);
+      console.log(watermarked);
+      console.log("LYCKAT");
+      setLoading(false);
+      setError("");
+      setEmail("");
+      setWatermarked("");
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
+    }
+  };
+
+  const removeShare = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      await fetch("http://localhost:8000/api/album/" + album._id, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          token: localStorage.getItem("token"),
+        },
+        body: JSON.stringify({
+          removeEmail: {
+            email: e.target.parentElement.parentElement.children[0].innerText,
+          },
+        }),
+      });
+
+      //Lyckat anrop
+      console.log("LYCKAT");
+      setLoading(false);
+      setError("");
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
+    }
+  };
+
+  const toggleWatermark = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      await fetch("http://localhost:8000/api/album/" + album._id, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          token: localStorage.getItem("token"),
+        },
+        body: JSON.stringify({
+          toggleWatermark: {
+            email: e.target.parentElement.parentElement.children[0].innerText,
+          },
+        }),
+      });
+
+      //Lyckat anrop
+      console.log("LYCKAT");
+      setLoading(false);
+      setError("");
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
+    }
+  };
 
   return (
-    <form>
-      <h2>Share Album</h2>
-      <div className="formDiv">
-        <label htmlFor="email">Email *</label>
-        <input
-          type="email"
-          id="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
+    <>
+      <form onSubmit={handleSubmit}>
+        <h2>Share Album</h2>
+        <div className="formDiv">
+          <label htmlFor="email">Email * {error && <p>{error}</p>}</label>
 
-      <div className="formDiv">
-        <label htmlFor="watermark">Use Watermark</label>
-        <div className="radioDiv">
           <input
-            type="radio"
-            name="watermark"
-            value="true"
-            onChange={(e) => setWatermarked(e.target.value)}
-            checked
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
-          <span>Yes</span>
         </div>
-        <div className="radioDiv">
-          <input
-            type="radio"
-            name="watermark"
-            value="false"
-            onChange={(e) => setWatermarked(e.target.value)}
-          />
-          <span>No</span>
-        </div>
-      </div>
 
-      <div className="formDiv">
-        <input type="submit" value="Share with Email" />
-      </div>
-    </form>
+        <div className="formDiv">
+          <label htmlFor="watermark">Use Watermark</label>
+          <div className="radioDiv">
+            <input
+              type="radio"
+              name="watermark"
+              value="true"
+              onChange={(e) => {
+                setWatermarked(e.target.value);
+                console.log(e.target.value);
+              }}
+              defaultChecked
+            />
+            <span>Yes</span>
+          </div>
+          <div className="radioDiv">
+            <input
+              type="radio"
+              name="watermark"
+              value="false"
+              onChange={(e) => {
+                setWatermarked(e.target.value);
+                console.log(e.target.value);
+              }}
+            />
+            <span>No</span>
+          </div>
+        </div>
+
+        <div className="formDiv">
+          <input type="submit" value="Share with Email" />
+        </div>
+      </form>
+      {album.invites.length > 0 && (
+        <div className="invitesDiv">
+          <h2>Shared</h2>
+          {album.invites.map((invite) => {
+            return (
+              <div id={invite._id} key={invite._id}>
+                <p>{invite.email}</p>
+                <p>Watermarked: {invite.watermarked ? "Yes" : "No"}</p>
+                <p>
+                  Ready: {invite.done ? "Yes, " : "No"}{" "}
+                  {invite.done && (
+                    <span
+                      id={invite.email}
+                      onClick={(e) => {
+                        localStorage.setItem("detailsEmail", e.target.id);
+                        handleShowDetails();
+                        console.log(localStorage.getItem("detailsEmail"));
+                      }}
+                      className="link"
+                    >
+                      Details
+                    </span>
+                  )}
+                </p>
+                <div className="watermarkButtons">
+                  <button onClick={removeShare}>Remove Share</button>
+                  <button onClick={toggleWatermark}>Toggle WM</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 };
 
