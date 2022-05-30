@@ -3,9 +3,10 @@ const router = express.Router(); // Router för express
 const Album = require("../models/Album"); // Album model
 const verify = require("../verifyToken"); // Verify token
 const { createAlbumValidation } = require("../validation"); // Validering
+const fs = require("fs"); // File system
 
 //Hämta alla album
-router.get("/", async (req, res) => {
+router.get("/", verify, async (req, res) => {
   try {
     const albums = await Album.find();
     res.status(200).json(albums);
@@ -15,7 +16,7 @@ router.get("/", async (req, res) => {
 });
 
 //hämta med id
-router.get("/:id", async (req, res) => {
+router.get("/:id", verify, async (req, res) => {
   try {
     const album = await Album.findById(req.params.id);
     res.status(200).json(album);
@@ -25,7 +26,7 @@ router.get("/:id", async (req, res) => {
 });
 
 //hämta album baserad på invite email det delats till  (för customers)
-router.get("/email/:email", async (req, res) => {
+router.get("/email/:email", verify, async (req, res) => {
   try {
     const albums = await Album.find({
       invites: {
@@ -35,14 +36,13 @@ router.get("/email/:email", async (req, res) => {
       },
     });
     res.status(200).json(albums);
-    console.log(albums);
   } catch (err) {
     res.status(500).json({ error: err.message }); // Om något går fel
   }
 });
 
 //hämta alla med foreign key owner
-router.get("/user/:id", async (req, res) => {
+router.get("/user/:id", verify, async (req, res) => {
   try {
     const albums = await Album.find({ owner: req.params.id });
     res.status(200).json(albums);
@@ -52,7 +52,7 @@ router.get("/user/:id", async (req, res) => {
 });
 
 //Skapa nytt album
-router.post("/", async (req, res) => {
+router.post("/", verify, async (req, res) => {
   //Ladda upp fil om req.files finns
   if (req.files) {
     const file = req.files.file;
@@ -82,17 +82,24 @@ router.post("/", async (req, res) => {
     const newAlbum = await album.save();
     res.status(200).json({ Created: newAlbum._id });
   } catch (err) {
-    console.log("Error: ", err);
     res.status(400).json({ error: err });
   }
 });
 
 //Raderar ett album
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verify, async (req, res) => {
   try {
     await Album.deleteOne({
       _id: req.params.id,
     });
+    //Radera fil från path
+    if (req.body.cover) {
+      fs.unlinkSync(
+        `${__dirname}/../../photo_proofing_app/public/Images/AlbumCovers/${req.body.cover}`
+      );
+    } else {
+      console.log("No body.cover");
+    }
     res.json({ Removed: req.params.id });
   } catch (err) {
     res.status(500).json({ error: err.message }); // Om något går fel
@@ -100,10 +107,10 @@ router.delete("/:id", async (req, res) => {
 });
 
 //Uppdaterar ett album
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", verify, async (req, res) => {
   try {
     if (req.files) {
-      //Upload Album Cover
+      //Ladda upp Album Cover
       if (req.body.cover) {
         const file = req.files.file;
         file.mv(
@@ -114,16 +121,11 @@ router.patch("/:id", async (req, res) => {
             }
           }
         );
-      } else {
-        //if not array
-        const file = req.files.file;
-        file.mv(
-          `${__dirname}/../../photo_proofing_app/public/Images/Photos/${req.body.fileName}`,
-          async (err) => {
-            if (err) {
-              return res.status(500).json({ Error: err });
-            }
-          }
+      }
+      //Ta bort bildfilen om den finns
+      if (req.body.oldCover) {
+        fs.unlinkSync(
+          `${__dirname}/../../photo_proofing_app/public/Images/AlbumCovers/${req.body.oldCover}`
         );
       }
     }
@@ -167,7 +169,6 @@ router.patch("/:id", async (req, res) => {
       ? (album.invites = album.invites.map((invite) => {
           if (invite.email === req.body.toggleWatermark.email) {
             invite.watermarked = !invite.watermarked;
-            console.log(invite.watermarked);
           }
           return invite;
         }))

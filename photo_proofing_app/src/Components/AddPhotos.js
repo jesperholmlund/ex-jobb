@@ -53,12 +53,10 @@ const AddPhotos = (props) => {
         });
         //LYCKADES REGISTRERA
         setUploadMessage("Uploaded Successfully");
-        console.log("Photos added");
         await props.refetchPhotos();
       } catch (err) {
         setError(err.response);
         setUploadMessage("Error Uploading", err.response);
-        console.log("Error Message:", err.response);
       } finally {
         setUploadPercentage(0);
         setLoading(false);
@@ -128,7 +126,6 @@ const AddPhotos = (props) => {
     e.stopPropagation();
     setIsDragActive(false);
     setIsDragOverDropzone(false);
-    console.log(e.dataTransfer.files);
 
     //Hämtar eller nollställer state för filer vid ändring av inputets värde
     if (e.dataTransfer.files) {
@@ -181,7 +178,7 @@ const AddPhotos = (props) => {
           name="photos"
           multiple
           onChange={handlePhotosChange}
-          accept="image/*"
+          accept="jpg, jpeg, png, gif, tiff, bmp, avif"
           ref={fileInputRef}
         />
         {preview && (
@@ -211,6 +208,7 @@ const AddPhotos = (props) => {
         {files && (
           <>
             <h4>{files.length} Files Choosen</h4>
+            <p>Allowed: jpg, png, tiff, gif, bmp</p>
             <input type="submit" value="Upload Images" />
           </>
         )}

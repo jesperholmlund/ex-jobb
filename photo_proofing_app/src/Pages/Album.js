@@ -5,6 +5,7 @@ import { useState } from "react";
 import EditAlbum from "../Components/EditAlbum";
 import AddPhotos from "../Components/AddPhotos";
 import ShareAlbum from "../Components/ShareAlbum";
+import DeleteAlbum from "../Components/DeleteAlbum";
 import ShowDetailsComponent from "../Components/ShowDetails";
 import Download from "../Components/Download";
 import DeleteIcon from "../Images/delete.svg";
@@ -22,6 +23,7 @@ const Album = (props) => {
   const [showAdd, setShowAdd] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
   const [deleteArray, setDeleteArray] = useState([]);
   const [comment, setComment] = useState("");
 
@@ -50,11 +52,13 @@ const Album = (props) => {
       setShowAdd(false);
       setShowShare(false);
       setShowDetails(false);
+      setShowDelete(false);
     } else {
       setShowEdit(true);
       setShowAdd(false);
       setShowShare(false);
       setShowDetails(false);
+      setShowDelete(false);
     }
   };
 
@@ -64,11 +68,13 @@ const Album = (props) => {
       setShowEdit(false);
       setShowShare(false);
       setShowDetails(false);
+      setShowDelete(false);
     } else {
       setShowAdd(true);
       setShowEdit(false);
       setShowShare(false);
       setShowDetails(false);
+      setShowDelete(false);
     }
   };
 
@@ -78,11 +84,13 @@ const Album = (props) => {
       setShowAdd(false);
       setShowEdit(false);
       setShowDetails(false);
+      setShowDelete(false);
     } else {
       setShowShare(true);
       setShowAdd(false);
       setShowEdit(false);
       setShowDetails(false);
+      setShowDelete(false);
     }
   };
 
@@ -92,8 +100,26 @@ const Album = (props) => {
       setShowShare(false);
       setShowAdd(false);
       setShowEdit(false);
+      setShowDelete(false);
     } else {
       setShowDetails(true);
+      setShowShare(false);
+      setShowAdd(false);
+      setShowEdit(false);
+      setShowDelete(false);
+    }
+  };
+
+  const handleShowDelete = (e) => {
+    if (showDelete) {
+      setShowDelete(false);
+      setShowDetails(false);
+      setShowShare(false);
+      setShowAdd(false);
+      setShowEdit(false);
+    } else {
+      setShowDelete(true);
+      setShowDetails(false);
       setShowShare(false);
       setShowAdd(false);
       setShowEdit(false);
@@ -126,6 +152,7 @@ const Album = (props) => {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          token: localStorage.getItem("token"),
         },
         body: JSON.stringify({ ids: deleteArray }),
       });
@@ -163,9 +190,7 @@ const Album = (props) => {
           }),
         }
       );
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (err) {}
   };
 
   const checkLiked = (photo) => {
@@ -199,15 +224,11 @@ const Album = (props) => {
           }),
         }
       );
-      console.log(response);
-    } catch (err) {
-      console.log(err);
-    }
+    } catch (err) {}
   };
 
   if (loadingPhotos) return <p>Loading...</p>;
   if (errorPhotos) {
-    console.log(errorPhotos);
     return <p>There was an error fetching photos.. {errorPhotos.message}</p>;
   }
 
@@ -266,6 +287,18 @@ const Album = (props) => {
           >
             Share Album
           </button>
+          <button
+            style={
+              showDelete
+                ? {
+                    background: "#a2b3f7",
+                  }
+                : null
+            }
+            onClick={handleShowDelete}
+          >
+            Delete Album
+          </button>
         </div>
       )}
       {showEdit && owner && (
@@ -288,6 +321,7 @@ const Album = (props) => {
           photosGet={photosGet}
         />
       )}
+      {showDelete && owner && <DeleteAlbum sentAlbum={albumGet} />}
       {deleteArray.length > 0 && owner && (
         <div id="deletePhotosDiv">
           <h3>

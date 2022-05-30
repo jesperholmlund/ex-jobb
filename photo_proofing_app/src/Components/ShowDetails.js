@@ -1,5 +1,4 @@
 const ShowDetails = ({ sentAlbum, photosGet }) => {
-  console.log(photosGet);
   let photosArray = [];
   return (
     <>

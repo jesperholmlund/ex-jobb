@@ -36,6 +36,7 @@ const EditProfile = () => {
     file.name
       ? formData.append("profilePicture", file.name)
       : formData.append("profilePicture", profilePicture);
+      formData.append("oldProfilePicture", profilePicture);
 
     try {
       const response = await axios.patch(

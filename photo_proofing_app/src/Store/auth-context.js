@@ -24,8 +24,6 @@ export const AuthContextProvider = (props) => {
   };
   const tokenTimeout = () => {
     setTokenTimeOver(true);
-    console.log("tokenTimeout");
-    console.log(tokenTimeOver);
     logout();
   };
 
@@ -42,6 +40,7 @@ export const AuthContextProvider = (props) => {
     isLoggedIn: isLoggedIn,
     login: login,
     logout: logout,
+    tokenTimeout: tokenTimeout,
     tokenTimeOver: tokenTimeOver,
   };
   return (

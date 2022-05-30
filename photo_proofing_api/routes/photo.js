@@ -2,8 +2,8 @@ const express = require("express"); // Express web server framework
 const router = express.Router(); // Router för express
 const Photo = require("../models/Photo"); // Album model
 const verify = require("../verifyToken"); // Verify token
-const { createPhotoValidation } = require("../validation"); // Validering
 const Jimp = require("jimp");
+const fs = require("fs"); // File system
 
 //Jimp function
 const watermarkImage = async (fileName, image, watermark) => {
@@ -26,7 +26,7 @@ const watermarkImage = async (fileName, image, watermark) => {
   );
 };
 
-router.get("/", async (req, res) => {
+router.get("/", verify, async (req, res) => {
   try {
     const photos = await Photo.find();
     res.status(200).json(photos);
@@ -36,11 +36,9 @@ router.get("/", async (req, res) => {
 });
 
 //Download images
-router.get("/download", async (req, res) => {
-  console.log("DOWNLOADA ROUTE");
+router.get("/download", verify, async (req, res) => {
   try {
     const photos = await Photo.find();
-    console.log(photos);
     res.status(200).json(photos);
   } catch (err) {
     res.status(500).json({ error: err.message }); // Om något går fel
@@ -48,7 +46,7 @@ router.get("/download", async (req, res) => {
 });
 
 //hämta med id
-router.get("/:id", async (req, res) => {
+router.get("/:id", verify, async (req, res) => {
   try {
     const photo = await Photo.findById(req.params.id);
     res.status(200).json(photo);
@@ -58,7 +56,7 @@ router.get("/:id", async (req, res) => {
 });
 
 //hämta alla med foreign key album
-router.get("/album/:id", async (req, res) => {
+router.get("/album/:id", verify, async (req, res) => {
   try {
     const photo = await Photo.find({ album: req.params.id });
     res.status(200).json(photo);
@@ -67,16 +65,60 @@ router.get("/album/:id", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", verify, async (req, res) => {
   //Om req.files är satt
   if (req.files) {
     const photosArray = [];
     if (req.files.file.length > 1) {
       //Om flera filer
       for (let i = 0; i < req.files.file.length; i++) {
-        const file = req.files.file[i];
+        //check file type
+        if (
+          req.files.file[i].mimetype === "image/jpeg" ||
+          req.files.file[i].mimetype === "image/png" ||
+          req.files.file[i].mimetype === "image/jpg" ||
+          req.files.file[i].mimetype === "image/gif" ||
+          req.files.file[i].mimetype === "image/bmp" ||
+          req.files.file[i].mimetype === "image/tiff"
+        ) {
+          const file = req.files.file[i];
+          file.mv(
+            `${__dirname}/../../photo_proofing_app/public/Images/Photos/${req.body.fileName[i]}`,
+            async (err) => {
+              if (err) {
+                return res.status(500).json({ Error: err });
+              }
+            }
+          );
+          watermarkImage(
+            "wm_" + req.body.fileName[i],
+            `${__dirname}/../../photo_proofing_app/public/Images/Photos/${req.body.fileName[i]}`,
+            `${__dirname}/../../photo_proofing_app/public/Images/watermark.png`
+          );
+
+          //Pushar varje bild till array
+          const photo = new Photo({
+            name: req.body.fileName[i],
+            watermarked: req.body.watermarked[i],
+            album: req.body.album[i],
+            owner: req.body.owner[i],
+          });
+          photosArray.push(photo);
+        }
+      }
+    } else {
+      //Om endast en fil, ingen loop och inget i-värde
+      const file = req.files.file;
+      if (
+        file.mimetype === "image/jpeg" ||
+        file.mimetype === "image/png" ||
+        file.mimetype === "image/jpg" ||
+        file.mimetype === "image/gif" ||
+        file.mimetype === "image/bmp" ||
+        file.mimetype === "image/tiff"
+      ) {
         file.mv(
-          `${__dirname}/../../photo_proofing_app/public/Images/Photos/${req.body.fileName[i]}`,
+          `${__dirname}/../../photo_proofing_app/public/Images/Photos/${req.body.fileName}`,
           async (err) => {
             if (err) {
               return res.status(500).json({ Error: err });
@@ -84,49 +126,23 @@ router.post("/", async (req, res) => {
           }
         );
         watermarkImage(
-          "wm_" + req.body.fileName[i],
-          `${__dirname}/../../photo_proofing_app/public/Images/Photos/${req.body.fileName[i]}`,
+          "wm_" + req.body.fileName,
+          `${__dirname}/../../photo_proofing_app/public/Images/Photos/${req.body.fileName}`,
           `${__dirname}/../../photo_proofing_app/public/Images/watermark.png`
         );
-
-        //Pushar varje bild till array
         const photo = new Photo({
-          name: req.body.fileName[i],
-          watermarked: req.body.watermarked[i],
-          album: req.body.album[i],
-          owner: req.body.owner[i],
+          name: req.body.fileName,
+          watermarked: req.body.watermarked,
+          album: req.body.album,
+          owner: req.body.owner,
         });
         photosArray.push(photo);
       }
-    } else {
-      //Om endast en fil, ingen loop och inget i-värde
-      const file = req.files.file;
-      file.mv(
-        `${__dirname}/../../photo_proofing_app/public/Images/Photos/${req.body.fileName}`,
-        async (err) => {
-          if (err) {
-            return res.status(500).json({ Error: err });
-          }
-        }
-      );
-      watermarkImage(
-        "wm_" + req.body.fileName,
-        `${__dirname}/../../photo_proofing_app/public/Images/Photos/${req.body.fileName}`,
-        `${__dirname}/../../photo_proofing_app/public/Images/watermark.png`
-      );
-      const photo = new Photo({
-        name: req.body.fileName,
-        watermarked: req.body.watermarked,
-        album: req.body.album,
-        owner: req.body.owner,
-      });
-      photosArray.push(photo);
     }
     //Tar bild-data och skickar till databasen
     Photo.insertMany(photosArray, (err, photos) => {
       if (err) {
         res.status(500).json({ error: err });
-        console.log("Error: ", err);
       } else {
         res.status(200).json(photos);
       }
@@ -137,26 +153,45 @@ router.post("/", async (req, res) => {
 });
 
 //Radera alla med id som finns med i medskickad array
-router.delete("/many", async (req, res) => {
+router.delete("/many", verify, async (req, res) => {
   try {
-    console.log(1, req.body);
     const photos = await Photo.find({ _id: { $in: req.body.ids } });
     photos.forEach((photo) => {
       photo.remove();
+      //Ta bort filen samt watermark varianten
+      try {
+        fs.unlinkSync(
+          `${__dirname}/../../photo_proofing_app/public/Images/Photos/${photo.name}`
+        );
+        fs.unlinkSync(
+          `${__dirname}/../../photo_proofing_app/public/Images/Watermarked/wm_${photo.name}`
+        );
+      } catch (error) {
+        console.log(error);
+      }
     });
     res.json({ Removed: req.body.ids });
-    console.log(2, req.body);
   } catch (err) {
-    console.log(3, req.body);
-    console.log("Error: ", err);
     res.status(500).json({ error: err.message }); // Om något går fel
   }
 });
 
 //Raderar en
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", verify, async (req, res) => {
   try {
+    const deletePhoto = await Photo.where("_id", req.params.id);
     await Photo.where("_id", req.params.id).deleteOne();
+    //Ta bort filen samt watermark varianten
+    try {
+      fs.unlinkSync(
+        `${__dirname}/../../photo_proofing_app/public/Images/Photos/${deletePhoto[0].name}`
+      );
+      fs.unlinkSync(
+        `${__dirname}/../../photo_proofing_app/public/Images/Watermarked/wm_${deletePhoto[0].name}`
+      );
+    } catch (error) {
+      console.log(error);
+    }
     res.json({ Removed: req.params.id });
   } catch (err) {
     res.status(500).json({ error: err.message }); // Om något går fel
@@ -164,9 +199,22 @@ router.delete("/:id", async (req, res) => {
 });
 
 //radera alla med userID
-router.delete("/user/:id", async (req, res) => {
+router.delete("/user/:id", verify, async (req, res) => {
   try {
+    const deletePhotos = await Photo.where("owner", req.params.id);
     await Photo.where("owner", req.params.id).deleteMany();
+    deletePhotos.forEach((photo) => {
+      try {
+        fs.unlinkSync(
+          `${__dirname}/../../photo_proofing_app/public/Images/Photos/${photo.name}`
+        );
+        fs.unlinkSync(
+          `${__dirname}/../../photo_proofing_app/public/Images/Watermarked/wm_${photo.name}`
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    });
     res.json({ Removed: "All from User " + req.params.id });
   } catch (err) {
     res.status(500).json({ error: err.message }); // Om något går fel
@@ -174,16 +222,29 @@ router.delete("/user/:id", async (req, res) => {
 });
 
 //radera alla med albumID
-router.delete("/album/:id", async (req, res) => {
+router.delete("/album/:id", verify, async (req, res) => {
   try {
+    const deletePhotos = await Photo.where("album", req.params.id);
     await Photo.where("album", req.params.id).deleteMany();
+    deletePhotos.forEach((photo) => {
+      try {
+        fs.unlinkSync(
+          `${__dirname}/../../photo_proofing_app/public/Images/Photos/${photo.name}`
+        );
+        fs.unlinkSync(
+          `${__dirname}/../../photo_proofing_app/public/Images/Watermarked/wm_${photo.name}`
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    });
     res.json({ Removed: "All from Album " + req.params.id });
   } catch (err) {
     res.status(500).json({ error: err.message }); // Om något går fel
   }
 });
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", verify, async (req, res) => {
   try {
     //Upload photo
     if (req.files) {
@@ -205,17 +266,6 @@ router.patch("/:id", async (req, res) => {
 
     // if user has liked photo, add user id to liked array else remove user id from liked array
     if (req.body.like) {
-      // //If user has liked photo
-      // console.log(1, req.body.like);
-      // console.log(2, photo);
-      // if (photo.likes.userID.includes(req.body.like.userID)) {
-      //   photo.likes.userID.pull(req.body.like.userID);
-      //   photo.likes.email.pull(req.body.like.email);
-      // } else {
-      //   photo.likes.userID.push(req.body.like.userID);
-      //   photo.likes.userID.push(req.body.like.email);
-      // }
-
       if (photo.likes.length > 0) {
         for (let i = 0; i < photo.likes.length; i++) {
           if (photo.likes[i].userID === req.body.like.userID) {
@@ -235,11 +285,9 @@ router.patch("/:id", async (req, res) => {
         });
       }
     }
-    console.log(photo);
     await photo.save();
     res.json({ Updated: req.params.id });
   } catch (err) {
-    console.log(err.message);
     res.status(500).json({ error: err.message }); // Om något går fel
   }
 });

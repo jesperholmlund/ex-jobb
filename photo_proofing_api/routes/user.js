@@ -4,6 +4,7 @@ const User = require("../models/User"); // User model
 const { registerValidation, loginValidation } = require("../validation"); // Validering
 const bcrypt = require("bcryptjs"); // Bcrypt
 const jwt = require("jsonwebtoken"); // JSON web token
+const fs = require("fs"); // File system
 
 const verify = require("../verifyToken"); // Verify token
 
@@ -54,7 +55,6 @@ router.post("/register", async (req, res) => {
     password: hashedPassword,
     role: req.body.role,
   });
-  console.log(user);
   try {
     const newUser = await user.save();
     res.json({ Created: newUser._id });
@@ -70,6 +70,16 @@ router.delete("/:id", verify, async (req, res) => {
       _id: req.params.id,
     });
     res.status(200).json(removedUser);
+    //Ta bort profilbild filen
+    if (req.body.profilePicture) {
+      try {
+        fs.unlinkSync(
+          `./public/images/profilePictures/${req.body.profilePicture}`
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -93,7 +103,17 @@ router.patch("/:id", verify, async (req, res) => {
           }
         }
       );
+      //Radera tidigare profilbild
+      try {
+        console.log(req.body.oldProfilePicture);
+        fs.unlinkSync(
+          `${__dirname}/../../photo_proofing_app/public/Images/ProfileImages/${req.body.oldProfilePicture}`
+        );
+      } catch (error) {
+        console.log("error");
+      }
     }
+
     const updateUser = await User.findById(req.params.id);
     req.body.first ? (updateUser.name.first = req.body.first) : null;
     req.body.last ? (updateUser.name.last = req.body.last) : null;

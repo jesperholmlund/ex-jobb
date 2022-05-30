@@ -1,7 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import AuthContext from "../Store/auth-context";
 
 const useFetch = (endpoint) => {
+  const navigate = useNavigate();
+  const authContext = useContext(AuthContext);
   // eslint-disable-next-line no-restricted-globals
   if (location.hostname === "localhost") {
     axios.defaults.baseURL = "http://localhost:8000/api/";
@@ -28,10 +32,16 @@ const useFetch = (endpoint) => {
       } catch (error) {
         setError(error);
         setLoading(false);
+        if (error) {
+          if (error.response.status === 401) {
+            authContext.logout();
+            navigate("/login");
+          }
+        }
       }
     };
     fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint]);
 
   const refetch = async () => {

@@ -32,8 +32,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault(); //Förhindra att sidan laddas om
-    console.log("email:", email);
-    console.log("password:", password);
     setLoading(true);
 
     try {
@@ -60,7 +58,7 @@ const Login = () => {
         localStorage.setItem("token", token); //Lägg till token i localStorage
         localStorage.setItem("id", id); //Lägg till ID i localStorage
         authContext.login(token); //Lägg till token i authContext
-
+        console.log(123, localStorage.getItem("token"));
         navigate("/Profile"); //Navigera till profile
       }
     } catch (err) {

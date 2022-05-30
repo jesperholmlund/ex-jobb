@@ -22,8 +22,8 @@ const LogOutButton = () => {
           onClick={() => {
             localStorage.removeItem("email");
             localStorage.removeItem("token");
-            navigate("/Login");
             authContext.logout();
+            navigate("/Login");
           }}
         >
           Logout

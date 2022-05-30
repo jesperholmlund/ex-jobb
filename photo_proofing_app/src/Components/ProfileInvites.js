@@ -8,7 +8,6 @@ const ProfileInvites = ({ role }) => {
     loading,
     error,
   } = useFetch(`album/email/${localStorage.getItem("email")}`);
-  console.log(role);
   return (
     <>
       {loading && (

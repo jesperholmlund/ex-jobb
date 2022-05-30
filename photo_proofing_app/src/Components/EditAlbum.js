@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import Loading from "../Images/loading.svg";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const EditAlbum = (props) => {
   const [name, setName] = useState(props.sentAlbum.name);
@@ -9,9 +10,9 @@ const EditAlbum = (props) => {
   const [cover, setCover] = useState(props.sentAlbum.cover);
   const [tags, setTags] = useState(props.sentAlbum.tags);
   const [file, setFile] = useState("");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     setError("");
@@ -26,6 +27,7 @@ const EditAlbum = (props) => {
     formData.append("tags", tags);
     formData.append("cover", cover);
     formData.append("file", file);
+    formData.append("oldCover", props.sentAlbum.cover);
 
     try {
       const response = await axios.patch(
@@ -40,13 +42,10 @@ const EditAlbum = (props) => {
       );
       //LYCKAT UPPDATERING
       setLoading(false);
-      console.log(response);
-      console.log("Album updated");
-      props.refetchAlbum();
+      navigate("/Profile"); //Navigera till profile
     } catch (err) {
       setLoading(false);
       setError("Something went wrong..");
-      console.log("Error Message:", err.response);
     }
   };
 

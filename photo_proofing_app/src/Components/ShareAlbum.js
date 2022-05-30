@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useFetch from "./useFetch";
 
 //handleShowDetails döljer showEdit, showAdd, showShare och visar showDetails i parent-komponenten
 const ShareAlbum = ({ sentAlbum, refetchAlbum, handleShowDetails }) => {
@@ -7,6 +8,14 @@ const ShareAlbum = ({ sentAlbum, refetchAlbum, handleShowDetails }) => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [album, setAlbum] = useState(sentAlbum);
+  const [shared, setShared] = useState("");
+
+  const {
+    data,
+    loading: loadingData,
+    error: errorData,
+    refetch: refetchData,
+  } = useFetch(`http://localhost:8000/api/album/${sentAlbum._id}`);
 
   useEffect(() => {
     setError("");
@@ -25,8 +34,8 @@ const ShareAlbum = ({ sentAlbum, refetchAlbum, handleShowDetails }) => {
         return;
       }
       //Loopar igenom array med invites. Kontrollerar om email finns i arrayen.
-      for (let i = 0; i < album.invites.length; i++) {
-        if (album.invites[i].email === email) {
+      for (let i = 0; i < data.invites.length; i++) {
+        if (data.invites[i].email === email) {
           setError("This email is already invited");
           setLoading(false);
           return;
@@ -47,13 +56,12 @@ const ShareAlbum = ({ sentAlbum, refetchAlbum, handleShowDetails }) => {
         }),
       });
       //Lyckat anrop
-      console.log(email);
-      console.log(watermarked);
-      console.log("LYCKAT");
       setLoading(false);
       setError("");
       setEmail("");
       setWatermarked("");
+      refetchData();
+      setShared(data);
     } catch (err) {
       setLoading(false);
       setError(err.message);
@@ -64,7 +72,6 @@ const ShareAlbum = ({ sentAlbum, refetchAlbum, handleShowDetails }) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
       await fetch("http://localhost:8000/api/album/" + album._id, {
         method: "PATCH",
@@ -80,9 +87,9 @@ const ShareAlbum = ({ sentAlbum, refetchAlbum, handleShowDetails }) => {
       });
 
       //Lyckat anrop
-      console.log("LYCKAT");
       setLoading(false);
       setError("");
+      refetchData();
     } catch (err) {
       setLoading(false);
       setError(err.message);
@@ -109,7 +116,6 @@ const ShareAlbum = ({ sentAlbum, refetchAlbum, handleShowDetails }) => {
       });
 
       //Lyckat anrop
-      console.log("LYCKAT");
       setLoading(false);
       setError("");
     } catch (err) {
@@ -142,7 +148,6 @@ const ShareAlbum = ({ sentAlbum, refetchAlbum, handleShowDetails }) => {
               value="true"
               onChange={(e) => {
                 setWatermarked(e.target.value);
-                console.log(e.target.value);
               }}
               defaultChecked
             />
@@ -155,7 +160,6 @@ const ShareAlbum = ({ sentAlbum, refetchAlbum, handleShowDetails }) => {
               value="false"
               onChange={(e) => {
                 setWatermarked(e.target.value);
-                console.log(e.target.value);
               }}
             />
             <span>No</span>
@@ -166,10 +170,10 @@ const ShareAlbum = ({ sentAlbum, refetchAlbum, handleShowDetails }) => {
           <input type="submit" value="Share with Email" />
         </div>
       </form>
-      {album.invites.length > 0 && (
+      {data && data.invites.length > 0 && (
         <div className="invitesDiv">
           <h2>Shared</h2>
-          {album.invites.map((invite) => {
+          {data.invites.map((invite) => {
             return (
               <div id={invite._id} key={invite._id}>
                 <p>{invite.email}</p>
@@ -182,7 +186,6 @@ const ShareAlbum = ({ sentAlbum, refetchAlbum, handleShowDetails }) => {
                       onClick={(e) => {
                         localStorage.setItem("detailsEmail", e.target.id);
                         handleShowDetails();
-                        console.log(localStorage.getItem("detailsEmail"));
                       }}
                       className="link"
                     >

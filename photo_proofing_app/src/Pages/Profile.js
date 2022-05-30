@@ -14,6 +14,7 @@ const Profile = () => {
     loading,
     error,
   } = useFetch(`user/${localStorage.getItem("id")}`);
+  console.log(profile);
 
   return (
     <section id="profileAlbumsSection">

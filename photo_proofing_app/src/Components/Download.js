@@ -4,10 +4,8 @@ import Promise from "bluebird";
 import Filesaver from "file-saver";
 
 const Download = (props) => {
-  console.log(props);
 
   const download = async () => {
-    console.log("TEST");
     try {
       const response = await axios.get(
         "http://localhost:8000/api/photo/download",
@@ -15,10 +13,8 @@ const Download = (props) => {
           responseType: "blob",
         }
       );
-      console.log("RESPONSE", response);
       return response;
     } catch (error) {
-      console.log("ERROR", error);
     }
   };
 
