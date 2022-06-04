@@ -1,6 +1,8 @@
 const express = require("express"); // Express web server framework
 const router = express.Router(); // Router för express
 const User = require("../models/User"); // User model
+const Album = require("../models/Album"); // Album model
+const Photo = require("../models/Photo"); // Photo model
 const { registerValidation, loginValidation } = require("../validation"); // Validering
 const bcrypt = require("bcryptjs"); // Bcrypt
 const jwt = require("jsonwebtoken"); // JSON web token
@@ -66,9 +68,40 @@ router.post("/register", async (req, res) => {
 //Raderar en användare
 router.delete("/:id", verify, async (req, res) => {
   try {
+    const user = await User.findOne({ _id: req.params.id });
+    console.log(user);
     const removedUser = await User.deleteOne({
       _id: req.params.id,
     });
+
+    //Cascade radera album
+    const albums = await Album.find({ owner: req.params.id });
+    await Album.deleteMany({ owner: req.params.id });
+    for (let album of albums) {
+      try {
+        fs.unlinkSync(
+          `${__dirname}/../../photo_proofing_app/public/Images/AlbumCovers/${album.cover}`
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    //Cascade radera fotografier
+    const photos = await Photo.find({ owner: req.params.id });
+    await Photo.deleteMany({ owner: req.params.id });
+    for (let photo of photos) {
+      try {
+        fs.unlinkSync(
+          `${__dirname}/../../photo_proofing_app/public/Images/Photos/${photo.name}`
+        );
+        fs.unlinkSync(
+          `${__dirname}/../../photo_proofing_app/public/Images/Watermarked/wm_${photo.name}`
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
     res.status(200).json(removedUser);
     //Ta bort profilbild filen
     if (req.body.profilePicture) {

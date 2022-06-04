@@ -3,9 +3,8 @@ import {
   BrowserRouter as Router,
   Route,
   Routes,
-  useNavigate,
 } from "react-router-dom";
-import { Fragment, useContext } from "react";
+import { useContext } from "react";
 import AuthContext from "./Store/auth-context";
 
 //Components
@@ -27,7 +26,6 @@ function App() {
 
   return (
     <Router>
-      <Fragment>
         <Header />
         <main>
           <Routes>
@@ -57,7 +55,6 @@ function App() {
           </Routes>
         </main>
         <Footer />
-      </Fragment>
     </Router>
   );
 }

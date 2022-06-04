@@ -26,6 +26,7 @@ const Album = (props) => {
   const [showDelete, setShowDelete] = useState(false);
   const [deleteArray, setDeleteArray] = useState([]);
   const [comment, setComment] = useState("");
+  const [message, setMessage] = useState("");
 
   let owner = false;
   if (sentAlbum.owner === localStorage.getItem("id")) {
@@ -181,6 +182,7 @@ const Album = (props) => {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
+            token: localStorage.getItem("token"),
           },
           body: JSON.stringify({
             like: {
@@ -190,7 +192,9 @@ const Album = (props) => {
           }),
         }
       );
-    } catch (err) {}
+    } catch (err) {
+      setMessage(err.message);
+    }
   };
 
   const checkLiked = (photo) => {
@@ -215,6 +219,7 @@ const Album = (props) => {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
+            token: localStorage.getItem("token"),
           },
           body: JSON.stringify({
             done: true,
@@ -224,6 +229,9 @@ const Album = (props) => {
           }),
         }
       );
+      if (response.ok) {
+        setMessage("Thank you for feedback!");
+      }
     } catch (err) {}
   };
 
@@ -342,6 +350,7 @@ const Album = (props) => {
             <label htmlFor="comment">Comment</label>
             <textarea onChange={(e) => setComment(e.target.value)} />
             <button onClick={sendRequest}>Send Request</button>
+            {message && <p>{message}</p>}
           </form>
         </>
       )}

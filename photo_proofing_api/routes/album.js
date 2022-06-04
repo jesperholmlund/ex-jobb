@@ -1,6 +1,7 @@
 const express = require("express"); // Express web server framework
 const router = express.Router(); // Router för express
 const Album = require("../models/Album"); // Album model
+const Photo = require("../models/Photo"); // Photo model
 const verify = require("../verifyToken"); // Verify token
 const { createAlbumValidation } = require("../validation"); // Validering
 const fs = require("fs"); // File system
@@ -89,16 +90,35 @@ router.post("/", verify, async (req, res) => {
 //Raderar ett album
 router.delete("/:id", verify, async (req, res) => {
   try {
+    const album = await Album.findById(req.params.id);
     await Album.deleteOne({
       _id: req.params.id,
     });
-    //Radera fil från path
-    if (req.body.cover) {
-      fs.unlinkSync(
-        `${__dirname}/../../photo_proofing_app/public/Images/AlbumCovers/${req.body.cover}`
+    fs.unlink(
+      `${__dirname}/../../photo_proofing_app/public/Images/AlbumCovers/${album.cover}`,
+      (err) => {
+        if (err) throw err;
+      }
+    );
+    const photos = await Photo.find({ album: req.params.id });
+    //cascade radera bilder
+    await Photo.deleteMany({
+      album: req.params.id,
+    });
+    for (let i = 0; i < photos.length; i++) {
+      //Radera fotografi-filer som finns i raderat album
+      fs.unlink(
+        `${__dirname}/../../photo_proofing_app/public/Images/Photos/${photos[i].name}`,
+        (err) => {
+          if (err) throw err;
+        }
       );
-    } else {
-      console.log("No body.cover");
+      fs.unlink(
+        `${__dirname}/../../photo_proofing_app/public/Images/Watermarked/wm_${photos[i].name}`,
+        (err) => {
+          if (err) throw err;
+        }
+      );
     }
     res.json({ Removed: req.params.id });
   } catch (err) {
