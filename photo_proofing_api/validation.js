@@ -1,4 +1,4 @@
-const Joi = require("Joi"); // Joi validator
+const Joi = require("joi"); // Joi validator
 
 //registrering av konto validering
 const registerValidation = (data) => {

@@ -326,6 +326,17 @@ main {
     #collection {
       margin: 50px auto;
       @include grid3Cols;
+      .photo-container-cards {
+        display: flex;
+        flex-direction: row;
+        .photo-card {
+          display: flex;
+          flex-direction: column;
+          padding: 20px;
+          justify-content: space-between;
+        }
+      }
+
       .photoDiv {
         position: relative;
         &:hover span {
@@ -377,4 +388,8 @@ main {
       }
     }
   }
+}
+
+.like-border {
+  border: 10px solid green;
 }

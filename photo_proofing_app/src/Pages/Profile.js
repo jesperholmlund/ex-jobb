@@ -5,6 +5,7 @@ import MyAlbums from "../Components/ProfileAlbums";
 import MyInvites from "../Components/ProfileInvites";
 import useFetch from "../Components/useFetch";
 import TitleRename from "../utility/TitleRename";
+import Notfications from "../Components/Notification";
 
 const Profile = () => {
   TitleRename("Photo Proof - Profile");

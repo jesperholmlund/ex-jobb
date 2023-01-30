@@ -4,6 +4,8 @@ const Photo = require("../models/Photo"); // Album model
 const verify = require("../verifyToken"); // Verify token
 const Jimp = require("jimp");
 const fs = require("fs"); // File system
+const { json } = require("express");
+const { registerValidation } = require("../validation");
 
 //Jimp function
 const watermarkImage = async (fileName, image, watermark) => {
@@ -102,6 +104,8 @@ router.post("/", verify, async (req, res) => {
             watermarked: req.body.watermarked[i],
             album: req.body.album[i],
             owner: req.body.owner[i],
+            saved: req.body.saved[i],
+            liked: req.body.liked[i],
           });
           photosArray.push(photo);
         }
@@ -135,6 +139,8 @@ router.post("/", verify, async (req, res) => {
           watermarked: req.body.watermarked,
           album: req.body.album,
           owner: req.body.owner,
+          saved: { saved: req.body.saved },
+          liked: req.body.liked,
         });
         photosArray.push(photo);
       }
@@ -260,35 +266,83 @@ router.patch("/:id", verify, async (req, res) => {
     }
     const photo = await Photo.findById(req.params.id);
     req.body.name ? (photo.name = req.body.name) : null;
+    req.body.liked ? (photo.liked = req.body.liked) : null;
     req.body.name ? (photo.watermark = "wm_" + req.body.name) : null;
     req.body.album ? (photo.album = req.body.album) : null;
     req.body.owner ? (photo.owner = req.body.owner) : null;
+    //req.body.saved.saved ? (photo.saved.saved = req.body.saved.saved) : null;
+    //req.body.saved.comment
+    // ? (photo.saved.comment = req.body.saved.comment)
+    //  : null;
 
     // if user has liked photo, add user id to liked array else remove user id from liked array
+
     if (req.body.like) {
-      if (photo.likes.length > 0) {
-        for (let i = 0; i < photo.likes.length; i++) {
-          if (photo.likes[i].userID === req.body.like.userID) {
-            photo.likes.userID.pull(req.body.like.userID);
-            photo.likes.email.pull(req.body.like.email);
-          } else {
-            photo.likes.push({
-              userID: req.body.like.userID,
-              email: req.body.like.email,
-            });
-          }
-        }
-      } else {
+      if (photo.likes.length === 0) {
         photo.likes.push({
           userID: req.body.like.userID,
           email: req.body.like.email,
         });
+      } else if (photo.likes.length > 0) {
+        const find = photo.likes.find((f) => f.email === req.body.like.email);
+        if (find) {
+          const photoToRemove = photo.likes.findIndex(
+            (p) => p.email === req.body.like.email
+          );
+          console.log(photoToRemove);
+          photo.likes.splice(photoToRemove, 1);
+          if (photo.likes.length === 0) {
+            photo.liked = false;
+          }
+        }
+        if (!find) {
+          console.log("Not found and inserting:");
+          photo.likes.push({
+            userID: req.body.like.userID,
+            email: req.body.like.email,
+          });
+        }
       }
+      //if(phots.likes.like.e)
+      //   if (photo.likes.length > 0) {
+      //     for (let i = 0; i < photo.likes.length; i++) {
+      //       if (photo.likes[i].userID === req.body.like.userID) {
+      //         photo.likes.userID.pull(req.body.like.userID);
+      //         photo.likes.email.pull(req.body.like.email);
+      //       } else {
+
+      // photo.likes.forEach((like, i) => {
+      //   if (like.email === req.body.like.email) {
+      //     photo.likes.splice(i, 1);
+      //     return;
+      //   }
+      //   if (like.email != req.body.like.email) {
+      //     photo.likes.push({
+      //       userID: req.body.like.userID,
+      //       email: req.body.like.email,
+      //     });
+      //     return;
+      //   }
+      // });
     }
+    if (req.body.saved) {
+      photo.saved.saved = req.body.saved.saved;
+      photo.saved.comment = req.body.saved.comment;
+    }
+    //     }
+    //   } else {
+    //     photo.likes.push({
+    //       userID: req.body.like.userID,
+    //       email: req.body.like.email,
+    //     });
+    //   }
+    // }
+
     await photo.save();
     res.json({ Updated: req.params.id });
   } catch (err) {
-    res.status(500).json({ error: err.message }); // Om något går fel
+    res.status(500).json({ error: err.message });
+    console.log(err); // Om något går fel
   }
 });
 

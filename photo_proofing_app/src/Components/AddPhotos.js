@@ -36,6 +36,7 @@ const AddPhotos = (props) => {
         formData.append("watermarked", "wm_" + fileNames[i]);
         formData.append("album", props.sentAlbum._id);
         formData.append("owner", props.sentAlbum.owner);
+        formData.append("saved", false);
       }
       try {
         await axios.post("http://localhost:8000/api/photo/", formData, {

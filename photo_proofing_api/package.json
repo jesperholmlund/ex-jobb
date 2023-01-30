@@ -4,18 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "concurrently \"nodemon app.js\" \"cd .. && cd photo_proofing_app && npm start\""
   },
   "author": "Anton Högström",
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "concurrently": "^7.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
     "express-fileupload": "^1.3.1",
     "jimp": "^0.16.1",
-    "joi": "^17.6.0",
+    "joi": "^17.7.0",
     "jsonwebtoken": "^8.5.1",
     "jszip": "^3.10.0",
     "mongoose": "^6.2.9",

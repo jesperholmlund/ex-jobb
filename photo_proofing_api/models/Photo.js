@@ -1,3 +1,4 @@
+const { boolean, string } = require("joi");
 const mongoose = require("mongoose");
 
 const PhotoSchema = new mongoose.Schema(
@@ -17,6 +18,10 @@ const PhotoSchema = new mongoose.Schema(
     updatedAt: {
       type: Date,
     },
+    saved: {
+      saved: { type: Boolean, default: false },
+      comment: { type: String, trim: true },
+    },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -24,6 +29,10 @@ const PhotoSchema = new mongoose.Schema(
     album: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Album",
+    },
+    liked: {
+      type: Boolean,
+      default: false,
     },
     likes: [
       {

@@ -12,6 +12,7 @@ import DeleteIcon from "../Images/delete.svg";
 import RemoveIcon from "../Images/remove.svg";
 import LikeIcon from "../Images/favorite.svg";
 import TitleRename from "../utility/TitleRename";
+import Photo from "../Components/Photo";
 
 const Album = (props) => {
   TitleRename("Photo Proof - Album");
@@ -27,6 +28,7 @@ const Album = (props) => {
   const [deleteArray, setDeleteArray] = useState([]);
   const [comment, setComment] = useState("");
   const [message, setMessage] = useState("");
+  const [save, setSave] = useState();
 
   let owner = false;
   if (sentAlbum.owner === localStorage.getItem("id")) {
@@ -164,6 +166,9 @@ const Album = (props) => {
     }
   };
 
+  const callDeletePhoto = (id) => {
+    setDeleteArray([...deleteArray, id]);
+  };
   const toggleLikePhoto = async (e) => {
     //toggle css klass för liked
     try {
@@ -196,7 +201,7 @@ const Album = (props) => {
       setMessage(err.message);
     }
   };
-
+  const [returnList, setReturnList] = useState([]);
   const checkLiked = (photo) => {
     //Kollar om en bild är likad, returnerar true eller false
     if (photo.likes.length > 0) {
@@ -239,6 +244,76 @@ const Album = (props) => {
   if (errorPhotos) {
     return <p>There was an error fetching photos.. {errorPhotos.message}</p>;
   }
+
+  const addPhoto = (photo) => {
+    if (returnList.some((s) => s.name === photo.name)) {
+      return;
+    }
+    setReturnList((prevState) => [...prevState, photo]);
+  };
+  const removePhoto = (photo) => {
+    const find = returnList.findIndex((f) => f.id === photo.id);
+    returnList.splice(find, 1);
+    setReturnList(returnList);
+  };
+  const sendPhotos = () => {
+    if (returnList.length === 0) {
+      console.log("Empty");
+      return;
+    } else {
+      console.log("sent " + returnList.length);
+    }
+  };
+  const likedPhoto = async (e) => {
+    try {
+      await fetch("http://localhost:8000/api/photo/" + e.target.name, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          token: localStorage.getItem("token"),
+        },
+        body: JSON.stringify({
+          like: {
+            userId: localStorage.getItem("userID"),
+            email: localStorage.getItem("email"),
+          },
+          liked: true,
+        }),
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const savePhoto = async (e) => {
+    try {
+      console.log(e.target.value);
+      let savedStatus = e.target.value;
+      if (savedStatus === "false") {
+        savedStatus = true;
+      } else {
+        savedStatus = false;
+      }
+      await fetch("http://localhost:8000/api/photo/" + e.target.name, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          token: localStorage.getItem("token"),
+        },
+        body: JSON.stringify({
+          saved: {
+            saved: savedStatus,
+            comment: "test",
+          },
+          saved: true,
+        }),
+      });
+    } catch (err) {
+      setMessage(err.message);
+    }
+  };
 
   return (
     <section className="AlbumSection">
@@ -355,34 +430,130 @@ const Album = (props) => {
         </>
       )}
       <div id="collection">
-        {photosGet.length === 0 && <h2>No Photos found, Add photos!</h2>}
-        {photosGet.map((photo) => {
-          return (
-            <div
-              className={checkLiked(photo) ? "liked photoDiv" : "photoDiv"}
-              id={photo._id}
-              key={photo._id}
-            >
-              <span
-                style={{ backgroundColor: !owner && "rgb(0, 153, 23)" }}
-                onClick={owner ? addRemoveDelete : toggleLikePhoto}
-              >
-                <img src={owner ? DeleteIcon : LikeIcon} alt="Delete" />
-              </span>
-              <picture className="photo">
-                <img
-                  src={
-                    role === "Customer"
-                      ? "../../Images/Watermarked/wm_" + photo.name
-                      : "../../Images/Photos/" + photo.name
-                  }
-                  alt={photo.name}
-                />
-              </picture>
-            </div>
-          );
-        })}
+        <div className="photo-container-cards">
+          {photosGet.length === 0 && <h2>No Photos found, Add photos!</h2>}
+          {photosGet.map((photo) => {
+            return (
+              <div id={photo._id} className="photo-card">
+                <Photo
+                  data={photo}
+                  id={photo._id}
+                  key={photo._id}
+                  name={photo.name}
+                  owner={owner}
+                  saved={photo.saved.saved}
+                  photoCallback={callDeletePhoto}
+                ></Photo>
+                {owner && photo.likes.length + "likes"}
+              </div>
+              //     {
+              //       //" <span onClick={owner ? addRemoveDelete : toggleLikePhoto}></span>"
+              //     }
+              //   </div>
+              //   <div
+              //     className={checkLiked(photo) ? "liked photoDiv" : "photoDiv"}
+              //     id={photo._id}
+              //     key={photo._id}
+              //   >
+              //     <span
+              //       style={{ backgroundColor: !owner && "rgb(0, 153, 23)" }}
+              //       onClick={owner ? addRemoveDelete : toggleLikePhoto}
+              //     >
+              //       <img src={owner ? DeleteIcon : LikeIcon} alt="Delete" />
+              //     </span>
+              //     <picture className="photo">
+              //       <img
+              //         src={
+              //           role === "Customer"
+              //             ? "../../Images/Watermarked/wm_" + photo.name
+              //             : "../../Images/Photos/" + photo.name
+              //         }
+              //         alt={photo.name}
+              //       />
+              //     </picture>
+              //     {!owner && (
+              //       <>
+              //         {" "}
+              //         <button
+              //           name={photo._id}
+              //           value={photo.saved.saved}
+              //           onClick={savePhoto}
+              //         >
+              //           {photo.saved.saved === true ? "Unsave" : "Save"}
+              //         </button>
+              //         <button
+              //           onClick={likedPhoto}
+              //           name={photo._id}
+              //           value={photo.liked}
+              //         >
+              //           Like
+              //         </button>
+              //       </>
+              //     )}
+              //   </div>
+              //   {!owner && (
+              //     <>
+              //       <textarea placeholder="Leave a comment" rows={5}></textarea>
+              //     </>
+              //   )}
+              // </div>
+            );
+          })}
+        </div>
       </div>
+      {owner && (
+        <>
+          {" "}
+          {sentAlbum.invites.length > 0 ? (
+            <>
+              {sentAlbum.invites.map((invite) => (
+                <div>{invite.comment}</div>
+              ))}
+            </>
+          ) : (
+            <>No message yet</>
+          )}
+        </>
+      )}
+      {photosGet.map((photo) => (
+        <>
+          {owner ? (
+            <>
+              {" "}
+              {photo.saved.saved === true ? (
+                <>
+                  {
+                    <picture
+                      style={{
+                        width: "300px",
+                        height: "300px",
+                        display: "block",
+                      }}
+                      className="photo"
+                    >
+                      <img
+                        src={
+                          role === "Customer"
+                            ? "../../Images/Watermarked/wm_" + photo.name
+                            : "../../Images/Photos/" + photo.name
+                        }
+                        alt={photo.name}
+                      />
+                    </picture>
+                  }
+                  {photo.saved.comment ? (
+                    <>{photo.saved.comment}</>
+                  ) : (
+                    "No comment"
+                  )}
+                </>
+              ) : null}
+            </>
+          ) : (
+            <></>
+          )}
+        </>
+      ))}
     </section>
   );
 };

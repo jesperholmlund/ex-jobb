@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 
 module.exports = function (req, res, next) {
   const token = req.header("token"); //Hämtar token från header
+  console.log(`Token is: ${token}\n`);
   if (!token)
     //Om token inte finns
     return res.status(401).json({ Message: "No authentication token found" });

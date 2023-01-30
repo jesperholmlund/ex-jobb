@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import LoadingSVG from "../Images/loading.svg";
 import useFetch from "../Components/useFetch";
+import Notifications from "./Notification";
 
 const ProfileAlbums = () => {
   const { data: albums, loading, error } = useFetch(`album/`);
@@ -47,6 +48,7 @@ const ProfileAlbums = () => {
               </Link>
             );
           })}
+          <Notifications sentALbums={albums}></Notifications>;
         </div>
       )}
     </section>
